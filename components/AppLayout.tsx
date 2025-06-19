@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { Home, BarChart3, Settings, PlayCircle, User, Moon, Sun, Laptop } from 'lucide-react'
+import { Home, BarChart3, Settings, PlayCircle, User, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from 'next-themes'
 

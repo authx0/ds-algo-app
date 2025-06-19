@@ -65,7 +65,7 @@ export function DSAQuiz({ onStatsUpdate }: DSAQuizProps) {
     onStatsUpdate?.(stats)
   }, [stats, onStatsUpdate])
 
-  const startQuiz = (difficulty?: string) => {
+  const startQuiz = () => {
     const questionCount = 10
     const newQuestions = getRandomQuestions(questionCount)
     setQuestions(newQuestions)
@@ -193,15 +193,15 @@ export function DSAQuiz({ onStatsUpdate }: DSAQuizProps) {
         </Button>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button onClick={() => startQuiz('easy')} variant="outline" className="w-full py-4">
+          <Button onClick={() => startQuiz()} variant="outline" className="w-full py-4">
             <Brain className="w-4 h-4 mr-2" />
             Easy Mode
           </Button>
-          <Button onClick={() => startQuiz('medium')} variant="outline" className="w-full py-4">
+          <Button onClick={() => startQuiz()} variant="outline" className="w-full py-4">
             <Target className="w-4 h-4 mr-2" />
             Medium Mode
           </Button>
-          <Button onClick={() => startQuiz('hard')} variant="outline" className="w-full py-4">
+          <Button onClick={() => startQuiz()} variant="outline" className="w-full py-4">
             <Trophy className="w-4 h-4 mr-2" />
             Hard Mode
           </Button>
