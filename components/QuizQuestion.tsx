@@ -12,16 +12,12 @@ import {
   XCircle, 
   ChevronLeft, 
   ChevronRight,
-  Lightbulb,
-  Code2,
-  FileText
+  Lightbulb
 } from 'lucide-react'
 
 interface QuizQuestionProps {
   question: Question
   onAnswer: (isCorrect: boolean, points: number) => void
-  questionNumber: number
-  totalQuestions: number
   showSolution: boolean
   onNext: () => void
   onPrev: () => void
@@ -32,8 +28,6 @@ interface QuizQuestionProps {
 export function QuizQuestion({
   question,
   onAnswer,
-  questionNumber,
-  totalQuestions,
   showSolution,
   onNext,
   onPrev,

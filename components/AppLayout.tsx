@@ -2,7 +2,6 @@
 
 import { ReactNode, useState, useEffect } from 'react'
 import { Home, BarChart3, Settings, PlayCircle, User, Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { useTheme } from 'next-themes'
 
 interface AppLayoutProps {

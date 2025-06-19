@@ -254,8 +254,6 @@ export function DSAQuiz({ onStatsUpdate }: DSAQuizProps) {
       <QuizQuestion
         question={questions[currentQuestionIndex]}
         onAnswer={handleAnswer}
-        questionNumber={currentQuestionIndex + 1}
-        totalQuestions={questions.length}
         showSolution={showSolution}
         onNext={handleNext}
         onPrev={handlePrev}
