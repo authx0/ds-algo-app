@@ -1,275 +1,223 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { Check, X, Code, Brain, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Question } from '@/lib/quizData'
+import { 
+  CheckCircle2, 
+  XCircle, 
+  ChevronLeft, 
+  ChevronRight,
+  Lightbulb,
+  Code2,
+  FileText
+} from 'lucide-react'
 
 interface QuizQuestionProps {
   question: Question
   onAnswer: (isCorrect: boolean, points: number) => void
   questionNumber: number
   totalQuestions: number
-  showSolution?: boolean
-  onNext?: () => void
-  onPrev?: () => void
-  isLast?: boolean
-  isFirst?: boolean
+  showSolution: boolean
+  onNext: () => void
+  onPrev: () => void
+  isLast: boolean
+  isFirst: boolean
 }
 
-export function QuizQuestion({ 
-  question, 
-  onAnswer, 
-  questionNumber, 
-  totalQuestions, 
-  showSolution, 
-  onNext, 
-  onPrev, 
-  isLast, 
-  isFirst 
+export function QuizQuestion({
+  question,
+  onAnswer,
+  questionNumber,
+  totalQuestions,
+  showSolution,
+  onNext,
+  onPrev,
+  isLast,
+  isFirst
 }: QuizQuestionProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('')
-  const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({})
-  const [isCorrect, setIsCorrect] = useState(false)
-
-  useEffect(() => {
-    setSelectedAnswer('')
-    setMatchingAnswers({})
-    setIsCorrect(false)
-  }, [question])
+  const [hasAnswered, setHasAnswered] = useState(false)
 
   const handleSubmit = () => {
-    let correct = false
-
-    switch (question.type) {
-      case 'multiple-choice':
-      case 'true-false':
-      case 'code-completion':
-        correct = selectedAnswer === question.correctAnswer
-        break
-      case 'matching':
-        const userAnswers = question.matchingPairs?.map(pair => `${pair.left}:${matchingAnswers[pair.left]}`) || []
-        correct = JSON.stringify(userAnswers.sort()) === JSON.stringify((question.correctAnswer as string[]).sort())
-        break
-    }
-
-    setIsCorrect(correct)
-    onAnswer(correct, correct ? question.points : 0)
+    if (!selectedAnswer) return
+    
+    const isCorrect = selectedAnswer === question.correctAnswer
+    const points = isCorrect ? getPointsForDifficulty(question.difficulty) : 0
+    
+    setHasAnswered(true)
+    onAnswer(isCorrect, points)
   }
 
-  const renderQuestion = () => {
-    switch (question.type) {
-      case 'multiple-choice':
-        return (
-          <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer}>
-            <div className="space-y-3">
-              {question.options?.map((option, index) => (
-                <div key={index}>
-                  <Label
-                    htmlFor={`option-${index}`}
-                    className="flex items-center space-x-3 p-4 rounded-lg border border-border cursor-pointer hover:bg-accent transition-colors"
-                  >
-                    <RadioGroupItem value={option} id={`option-${index}`} />
-                    <span className="text-base">{option}</span>
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
-        )
-
-      case 'true-false':
-        return (
-          <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer}>
-            <div className="flex gap-6 justify-center">
-              <div>
-                <Label
-                  htmlFor="true"
-                  className="flex flex-col items-center p-8 rounded-lg border border-border cursor-pointer hover:bg-accent transition-colors min-w-[120px]"
-                >
-                  <RadioGroupItem value="true" id="true" className="mb-3" />
-                  <span className="text-xl font-semibold">True</span>
-                </Label>
-              </div>
-              <div>
-                <Label
-                  htmlFor="false"
-                  className="flex flex-col items-center p-8 rounded-lg border border-border cursor-pointer hover:bg-accent transition-colors min-w-[120px]"
-                >
-                  <RadioGroupItem value="false" id="false" className="mb-3" />
-                  <span className="text-xl font-semibold">False</span>
-                </Label>
-              </div>
-            </div>
-          </RadioGroup>
-        )
-
-      case 'code-completion':
-        return (
-          <div className="space-y-4">
-            <pre className="p-4 bg-muted text-muted-foreground rounded-lg overflow-x-auto text-sm">
-              <code>{question.code}</code>
-            </pre>
-            <input
-              type="text"
-              value={selectedAnswer}
-              onChange={(e) => setSelectedAnswer(e.target.value)}
-              placeholder="Enter your answer..."
-              className="w-full p-4 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-base"
-            />
-          </div>
-        )
-
-      case 'matching':
-        return (
-          <div className="space-y-4">
-            {question.matchingPairs?.map((pair, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="flex-1 p-4 bg-muted rounded-lg font-medium text-base">
-                  {pair.left}
-                </div>
-                <select
-                  value={matchingAnswers[pair.left] || ''}
-                  onChange={(e) => setMatchingAnswers({ ...matchingAnswers, [pair.left]: e.target.value })}
-                  className="flex-1 p-4 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-base"
-                >
-                  <option value="">Select a match...</option>
-                  {question.matchingPairs?.map((p, i) => (
-                    <option key={i} value={p.right}>{p.right}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-        )
+  const getPointsForDifficulty = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 10
+      case 'medium': return 15
+      case 'hard': return 20
+      default: return 10
     }
   }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-gray-400 text-white'
-      case 'medium': return 'bg-gray-600 text-white'
-      case 'hard': return 'bg-black text-white'
-      default: return 'bg-gray-500 text-white'
+      case 'easy': return 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30'
+      case 'medium': return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30'
+      case 'hard': return 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30'
+      default: return 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30'
     }
   }
 
-  const isAnswerComplete = () => {
-    if (question.type === 'matching') {
-      return question.matchingPairs?.every(pair => matchingAnswers[pair.left]) || false
-    }
-    return selectedAnswer !== ''
-  }
+  const isCorrectAnswer = (option: string) => option === question.correctAnswer
 
   return (
-    <div className="flex flex-col xl:flex-row gap-8 w-full">
-      {/* Left: Question & Answer */}
-      <div className="flex-1 bg-card text-card-foreground rounded-xl shadow-sm p-8 border">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <Badge className={getDifficultyColor(question.difficulty)}>
-            {question.difficulty.toUpperCase()}
-          </Badge>
-          <Badge variant="outline" className="border-border">
-            {question.topic === 'data-structure' ? 'Data Structure' : 'Algorithm'}
-          </Badge>
-          <Badge variant="outline" className="border-border">{question.subtopic}</Badge>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {questionNumber} of {totalQuestions}
-            </span>
-            <Badge variant="secondary">{question.points} pts</Badge>
+    <Card className="glass border-gray-200 dark:border-gray-700">
+      <CardHeader className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge className={`${getDifficultyColor(question.difficulty)} border`}>
+              {question.difficulty}
+            </Badge>
+            <Badge className="glass border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white bg-transparent">
+              {question.subtopic}
+            </Badge>
           </div>
+          <Badge className="glass border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white bg-transparent">
+            {getPointsForDifficulty(question.difficulty)} points
+          </Badge>
         </div>
-
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold leading-relaxed flex items-start gap-3">
-            {question.type === 'code-completion' && <Code className="w-6 h-6 mt-1 flex-shrink-0" />}
+        
+        <div className="space-y-2">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
             {question.question}
-          </h2>
+          </h3>
+          {question.code && (
+            <div className="mt-4 p-4 glass rounded border-gray-200 dark:border-gray-700 font-mono text-sm overflow-x-auto">
+              <pre className="text-gray-800 dark:text-gray-200">{question.code}</pre>
+            </div>
+          )}
         </div>
+      </CardHeader>
 
-        <div className="mb-8">
-          {renderQuestion()}
-        </div>
+      <CardContent className="space-y-6">
+        <RadioGroup 
+          value={selectedAnswer} 
+          onValueChange={setSelectedAnswer}
+          disabled={hasAnswered}
+          className="space-y-3"
+        >
+          {(question.options || []).map((option, index) => {
+            const optionLetter = String.fromCharCode(65 + index)
+            const isCorrect = hasAnswered && isCorrectAnswer(option)
+            const isWrong = hasAnswered && selectedAnswer === option && !isCorrect
+            
+            return (
+              <div
+                key={index}
+                className={`relative rounded transition-all duration-200 ${
+                  hasAnswered
+                    ? isCorrect
+                      ? 'bg-green-500/20 border-green-500/50'
+                      : isWrong
+                      ? 'bg-red-500/20 border-red-500/50'
+                      : 'glass border-gray-200 dark:border-gray-700'
+                    : 'glass border-gray-200 dark:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                }`}
+              >
+                <Label
+                  htmlFor={`option-${index}`}
+                  className={`flex items-center gap-4 p-5 cursor-pointer rounded ${
+                    hasAnswered ? 'cursor-not-allowed' : ''
+                  }`}
+                >
+                  <RadioGroupItem
+                    value={option}
+                    id={`option-${index}`}
+                    className="border-gray-400 dark:border-gray-600"
+                  />
+                  <div className="flex items-center gap-3 flex-1">
+                    <span className={`font-semibold text-lg ${
+                      hasAnswered
+                        ? isCorrect
+                          ? 'text-green-700 dark:text-green-300'
+                          : isWrong
+                          ? 'text-red-700 dark:text-red-300'
+                          : 'text-gray-700 dark:text-gray-300'
+                        : 'text-gray-900 dark:text-white'
+                    }`}>
+                      {optionLetter}.
+                    </span>
+                    <span className={`text-base ${
+                      hasAnswered
+                        ? isCorrect
+                          ? 'text-green-700 dark:text-green-300'
+                          : isWrong
+                          ? 'text-red-700 dark:text-red-300'
+                          : 'text-gray-700 dark:text-gray-300'
+                        : 'text-gray-800 dark:text-gray-200'
+                    }`}>
+                      {option}
+                    </span>
+                  </div>
+                  {hasAnswered && (
+                    <div className="ml-auto">
+                      {isCorrect && <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />}
+                      {isWrong && <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />}
+                    </div>
+                  )}
+                </Label>
+              </div>
+            )
+          })}
+        </RadioGroup>
 
-        {!showSolution && (
+        {!hasAnswered && (
           <Button
             onClick={handleSubmit}
-            disabled={!isAnswerComplete()}
-            className="w-full py-3 text-base"
+            disabled={!selectedAnswer}
             size="lg"
+            className="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-500 disabled:to-gray-600 text-white rounded text-lg font-semibold shadow-lg transition-all duration-200"
           >
             Submit Answer
           </Button>
         )}
-      </div>
 
-      {/* Right: Solution/Explanation */}
-      <div className="flex-1 bg-card text-card-foreground rounded-xl shadow-sm p-8 border min-h-[400px] flex flex-col">
-        {showSolution ? (
-          <>
-            <div className="flex items-center gap-3 mb-6">
-              {isCorrect ? (
-                <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                  <X className="w-5 h-5 text-red-600 dark:text-red-400" />
-                </div>
-              )}
-              <span className="text-2xl font-semibold">
-                {isCorrect ? 'Correct!' : 'Incorrect'}
-              </span>
-            </div>
-
-            <div className="mb-6 flex-1">
-              <h3 className="text-lg font-semibold mb-3">Explanation</h3>
-              <div className="text-base leading-relaxed text-muted-foreground mb-4">
-                {question.explanation}
+        {showSolution && hasAnswered && (
+          <div className="space-y-4">
+            <div className="p-5 glass rounded border-gray-200 dark:border-gray-700 space-y-3">
+              <div className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <Lightbulb className="w-5 h-5 text-yellow-500" />
+                <span className="font-semibold">Explanation</span>
               </div>
-              {!isCorrect && (
-                <div className="p-4 bg-muted rounded-lg border">
-                  <span className="text-sm font-medium text-muted-foreground">Correct answer: </span>
-                  <span className="text-base font-semibold">
-                    {Array.isArray(question.correctAnswer)
-                      ? question.correctAnswer.join(', ')
-                      : question.correctAnswer}
-                  </span>
-                </div>
-              )}
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{question.explanation}</p>
             </div>
 
-            <div className="flex gap-3 mt-auto">
-              <Button 
-                onClick={onPrev} 
-                variant="outline" 
-                disabled={isFirst} 
-                className="flex-1 py-3"
+            <div className="flex gap-3">
+              <Button
+                onClick={onPrev}
+                disabled={isFirst}
+                variant="outline"
+                size="lg"
+                className="flex-1 glass border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded py-6 disabled:opacity-50"
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
+                <ChevronLeft className="w-5 h-5 mr-2" />
                 Previous
               </Button>
-              <Button 
-                onClick={onNext} 
-                className="flex-1 py-3" 
-                disabled={isLast}
+              <Button
+                onClick={onNext}
+                size="lg"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded py-6 shadow-lg"
               >
-                {isLast ? 'Finish Quiz' : 'Next'}
-                <ChevronRight className="w-4 h-4 ml-2" />
+                {isLast ? 'Finish Quiz' : 'Next Question'}
+                <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Brain className="w-16 h-16 mb-4" />
-            <span className="text-lg text-center">Submit your answer to see the solution and explanation</span>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 } 

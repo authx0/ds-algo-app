@@ -336,6 +336,7 @@ export function getQuestionsByDifficulty(difficulty: string): Question[] {
 }
 
 export function getRandomQuestions(count: number): Question[] {
-  const shuffled = [...quizQuestions].sort(() => 0.5 - Math.random())
+  const allowed = quizQuestions.filter(q => q.type === 'multiple-choice' || q.type === 'true-false')
+  const shuffled = [...allowed].sort(() => 0.5 - Math.random())
   return shuffled.slice(0, count)
 } 
